@@ -170,20 +170,9 @@ strong{font-weight:700;color:var(--ink)}
 .header__nav a.is-current{color:var(--orange-dk);background:var(--orange-soft)}
 
 /* Les deux marges auto répartissent l'espace libre :
-   logo à gauche, navigation au centre, téléphone + CTA collés à droite.
+   logo à gauche, navigation au centre, CTA collé à droite.
    Reste correct quand la navigation passe en display:none. */
 .header__actions{display:flex;align-items:center;gap:14px;margin-left:auto}
-.header__tel{display:flex;align-items:center;gap:11px;color:var(--ink)}
-.header__tel-ico{
-  width:36px;height:36px;border-radius:50%;flex:none;
-  display:flex;align-items:center;justify-content:center;
-  background:var(--orange-soft);color:var(--orange);font-size:1.05rem;
-  transition:background .2s var(--ease),color .2s var(--ease);
-}
-.header__tel:hover .header__tel-ico{background:var(--orange);color:#fff}
-.header__tel-txt{display:flex;flex-direction:column;line-height:1.28}
-.header__tel-txt small{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
-.header__tel-txt strong{font-size:.97rem}
 
 /* ============================================================
    HERO
@@ -772,7 +761,6 @@ strong{font-weight:700;color:var(--ink)}
   .header__inner{min-height:64px;gap:12px}
   .header__logo{display:flex;align-items:center;min-height:44px}
   .header__logo img{height:38px}
-  .header__tel{display:none}
 
   /* ---- Zones tactiles portées à 44px minimum ---- */
   .btn--sm{padding:15px 20px}

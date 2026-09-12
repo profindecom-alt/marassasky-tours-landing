@@ -161,7 +161,7 @@ directement depuis Google Tag Manager si vous préférez passer par GTM.
 
 | Section       | Contenu |
 |---------------|---------|
-| En-tête       | Logo, ancres, téléphone cliquable, bouton « Devis gratuit » |
+| En-tête       | Logo, ancres, bouton « Devis gratuit » |
 | Hero          | H1, accroche, note 5/5 + **formulaire de devis visible sans défilement** |
 | Confiance     | 24h/24 · Chauffeurs agréés · Tarifs transparents · Autorisation TT/34824/2023 *(masqué sur mobile, en attente de refonte)* |
 | Services      | Les 6 services du site officiel |
