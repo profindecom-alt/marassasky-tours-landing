@@ -34,6 +34,28 @@ Hostinger, Netlify, Vercel, Cloudflare Pages, ou un sous-dossier de votre serveu
 **Recommandation :** un sous-domaine dédié, par exemple `https://lp.marassasky-tours.ma`,
 afin de garder les statistiques de campagne séparées du site principal.
 
+### Protection du référencement du site principal
+
+La page reprend une partie des textes de marassasky-tours.ma. Sans précaution,
+les deux se concurrenceraient dans les résultats de recherche. Quatre garde-fous
+sont en place :
+
+| Où | Quoi |
+|---|---|
+| `index.html` | `<meta name="robots" content="noindex, follow">` + `googlebot` |
+| `merci.html` | `<meta name="robots" content="noindex, nofollow">` |
+| `robots.txt` | Crawl **autorisé** (indispensable pour que le noindex soit lu) |
+| `.htaccess` / `_headers` | En-tête `X-Robots-Tag: noindex`, images comprises |
+
+**Ne jamais ajouter `Disallow: /` dans `robots.txt`.** Un robot bloqué au crawl
+ne lit pas la balise noindex : l'URL peut alors apparaître quand même dans les
+résultats, et les annonces Google Ads risquent d'être refusées faute de pouvoir
+explorer la page de destination.
+
+**Ne pas remettre de `rel="canonical"` vers le site principal.** Associé à un
+noindex, ce couple envoie deux ordres contradictoires et Google peut reporter le
+noindex sur l'URL canonique, donc désindexer marassasky-tours.ma.
+
 Le webhook n8n accepte déjà **toutes les origines** (CORS vérifié) : la page fonctionnera
 depuis n'importe quel domaine, sans configuration supplémentaire.
 

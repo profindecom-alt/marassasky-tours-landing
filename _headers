@@ -1,0 +1,5 @@
+# Netlify et Cloudflare Pages (équivalent du .htaccess, ignoré ailleurs).
+# Même objectif : un noindex au niveau serveur, appliqué aussi aux images.
+
+/*
+  X-Robots-Tag: noindex

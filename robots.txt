@@ -1,0 +1,24 @@
+# Landing page Google Ads de Marassa Sky Tours.
+# Elle ne doit PAS apparaître dans les résultats naturels ni concurrencer
+# marassasky-tours.ma, dont elle reprend une partie des textes.
+#
+# Le blocage se fait par la balise <meta name="robots" content="noindex">
+# présente sur chaque page, et non par un Disallow ci-dessous.
+#
+# Pourquoi : un robot bloqué au crawl ne peut pas lire la balise noindex.
+# L'URL risquerait alors d'apparaître quand même dans les résultats, sous
+# forme de lien nu, dès qu'un site pointe vers elle. Pour faire disparaître
+# une page, il faut donc l'AUTORISER au crawl et lui poser un noindex.
+
+User-agent: *
+Allow: /
+
+# Google Ads doit pouvoir explorer la page pour contrôler la qualité et la
+# conformité de l'annonce. Un blocage ici ferait refuser les annonces.
+User-agent: AdsBot-Google
+Allow: /
+
+User-agent: AdsBot-Google-Mobile
+Allow: /
+
+# Aucun sitemap : rien sur ce domaine n'a vocation à être indexé.

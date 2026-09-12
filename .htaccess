@@ -1,0 +1,12 @@
+# Hostinger, Apache, LiteSpeed
+#
+# Double la balise meta noindex au niveau du serveur. L'en-tête s'applique
+# à TOUTES les réponses, y compris les images : la photo du hero et celles
+# de la galerie ne remonteront pas non plus dans Google Images.
+#
+# Une balise meta ne peut être lue que dans du HTML ; l'en-tête, lui,
+# couvre aussi les fichiers non HTML.
+
+<IfModule mod_headers.c>
+  Header set X-Robots-Tag "noindex"
+</IfModule>
