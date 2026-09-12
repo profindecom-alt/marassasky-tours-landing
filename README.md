@@ -31,8 +31,9 @@ node serve.js      # http://localhost:8080
 Copiez le dossier tel quel sur n'importe quel hébergement statique :
 Hostinger, Netlify, Vercel, Cloudflare Pages, ou un sous-dossier de votre serveur.
 
-**Recommandation :** un sous-domaine dédié, par exemple `https://lp.marassasky-tours.ma`,
+**Recommandation :** un sous-domaine dédié, `https://form.marassasky-tours.ma`,
 afin de garder les statistiques de campagne séparées du site principal.
+C'est le domaine déclaré dans le conteneur Google Tag Manager `GTM-MDLM8PX6`.
 
 ### Protection du référencement du site principal
 
