@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Marassa Sky Tours">
+  <title>Marassa Sky Tours</title>
+  <defs>
+    <linearGradient id="or" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFCE5A"/>
+      <stop offset="1" stop-color="#E08A00"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#or)" d="M12 84V16H36L50 43L64 16H88V84H72V43L57 70H43L28 43V84Z"/>
+</svg>

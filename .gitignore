@@ -1,0 +1,17 @@
+# Système
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Éditeurs
+.vscode/
+.idea/
+*.swp
+
+# Dépendances (le projet n'en a aucune pour l'instant)
+node_modules/
+package-lock.json
+
+# Journaux et fichiers temporaires
+*.log
+*.tmp
