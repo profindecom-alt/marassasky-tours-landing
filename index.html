@@ -167,9 +167,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="progress" role="group" aria-label="Progression du formulaire">
           <div class="progress__track"><span class="progress__fill" id="progressFill"></span></div>
           <ol class="progress__list">
-            <li class="is-active" data-for="1"><b>1</b><span>Trajet</span></li>
-            <li data-for="2"><b>2</b><span>Passagers</span></li>
-            <li data-for="3"><b>3</b><span>Contact</span></li>
+            <li class="is-active" data-for="1"><b>1</b><span>Contact</span></li>
+            <li data-for="2"><b>2</b><span>Trajet</span></li>
+            <li data-for="3"><b>3</b><span>Passagers</span></li>
           </ol>
         </div>
       </div>
@@ -178,7 +178,30 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         <!-- ---------- Étape 1 ---------- -->
         <fieldset class="step is-active" data-step="1">
-          <legend class="sr-only">Étape 1 : votre trajet</legend>
+          <legend class="sr-only">Étape 1 : vos coordonnées</legend>
+
+          <p class="form__q">À qui envoyons-nous le devis ?</p>
+
+          <div class="form__row form__row--2">
+            <label class="field">
+              <span>Nom complet<i>*</i></span>
+              <input type="text" name="nom" placeholder="Votre nom" required autocomplete="name">
+            </label>
+            <label class="field">
+              <span>Téléphone / WhatsApp<i>*</i></span>
+              <input type="tel" name="telephone" placeholder="+212 6 00 00 00 00" required autocomplete="tel" inputmode="tel">
+            </label>
+          </div>
+
+          <label class="field">
+            <span>E-mail</span>
+            <input type="email" name="email" placeholder="vous@exemple.com" autocomplete="email" inputmode="email">
+          </label>
+        </fieldset>
+
+        <!-- ---------- Étape 2 ---------- -->
+        <fieldset class="step" data-step="2" hidden>
+          <legend class="sr-only">Étape 2 : votre trajet</legend>
 
           <p class="form__q">Quel service recherchez-vous ?<i>*</i></p>
           <div class="tiles tiles--2" role="radiogroup" aria-label="Service souhaité">
@@ -199,9 +222,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </div>
         </fieldset>
 
-        <!-- ---------- Étape 2 ---------- -->
-        <fieldset class="step" data-step="2" hidden>
-          <legend class="sr-only">Étape 2 : passagers et véhicule</legend>
+        <!-- ---------- Étape 3 ---------- -->
+        <fieldset class="step" data-step="3" hidden>
+          <legend class="sr-only">Étape 3 : passagers et véhicule</legend>
+
+          <div class="recap" id="recap" aria-live="polite"></div>
 
           <p class="form__q">Combien de personnes ?<i>*</i></p>
           <div class="chipset" role="radiogroup" aria-label="Nombre de personnes">
@@ -230,29 +255,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <label class="tile"><input type="radio" name="vehicule" value="Autocar"><span class="tile__in"><svg class="ico"><use href="#i-bus"></use></svg><b>Autocar</b></span></label>
             <label class="tile tile--wide"><input type="radio" name="vehicule" value="Je souhaite être conseillé"><span class="tile__in"><svg class="ico"><use href="#i-spark"></use></svg><b>Conseillez-moi</b></span></label>
           </div>
-        </fieldset>
-
-        <!-- ---------- Étape 3 ---------- -->
-        <fieldset class="step" data-step="3" hidden>
-          <legend class="sr-only">Étape 3 : vos coordonnées</legend>
-
-          <div class="recap" id="recap" aria-live="polite"></div>
-
-          <div class="form__row form__row--2">
-            <label class="field">
-              <span>Nom complet<i>*</i></span>
-              <input type="text" name="nom" placeholder="Votre nom" required autocomplete="name">
-            </label>
-            <label class="field">
-              <span>Téléphone / WhatsApp<i>*</i></span>
-              <input type="tel" name="telephone" placeholder="+212 6 00 00 00 00" required autocomplete="tel" inputmode="tel">
-            </label>
-          </div>
-
-          <label class="field">
-            <span>E-mail</span>
-            <input type="email" name="email" placeholder="vous@exemple.com" autocomplete="email" inputmode="email">
-          </label>
         </fieldset>
 
         <!-- anti-spam -->

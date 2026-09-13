@@ -88,6 +88,8 @@ https://n8n.srv1019025.hstgr.cloud/webhook/9ee70198-c719-4860-a10f-fdc7dc7e587e
   "utm_term": "transfert aeroport casablanca",
   "utm_content": "annonce-a",
 
+  "lead_id": "6f0a2f3c-6b1a-4f0e-9c1b-2b7d6e4a1f55",
+  "lead_status": "complet",
   "source": "landing-google-ads",
   "page_url": "https://lp.marassasky-tours.ma/?gclid=...",
   "page_title": "Transport Touristique au Maroc | ...",
@@ -114,18 +116,44 @@ vidé** : le visiteur peut renvoyer sans tout ressaisir. Une réponse 4xx n'est 
 
 ### Formulaire en 3 étapes
 
-Le formulaire est découpé en trois étapes (**Trajet → Passagers → Contact**) avec une barre
+Le formulaire est découpé en trois étapes (**Contact → Trajet → Passagers**) avec une barre
 de progression. Les choix se font par tuiles et puces cliquables plutôt que par listes
 déroulantes, ce qui réduit nettement l'abandon sur mobile.
 
-- Les coordonnées ne sont demandées qu'à la **dernière** étape, une fois le visiteur engagé.
-- L'étape 3 affiche un récapitulatif du trajet choisi avant validation.
+- Les coordonnées sont demandées **en premier**, pour qu'un abandon en cours de route
+  laisse quand même un contact exploitable (voir la capture partielle ci-dessous).
+- L'étape 3 affiche un récapitulatif du service et du trajet choisis avant validation.
 - La validation est faite étape par étape, avec surlignage des champs manquants.
 - Les valeurs des étapes précédentes restent dans le `FormData` : la charge utile envoyée
   à n8n est identique quelle que soit l'étape où elles ont été saisies.
 - Le formulaire **nécessite JavaScript** : l'envoi passe par `fetch` vers n8n et les étapes
   2 et 3 portent l'attribut `hidden` dans le HTML, pour éviter qu'elles clignotent au
   chargement avant l'initialisation.
+
+### Capture partielle : deux envois pour un même lead
+
+Au clic sur « Continuer » à l'étape 1, les coordonnées validées partent **immédiatement**
+au webhook. Le visiteur qui abandonne aux étapes suivantes reste donc joignable.
+
+| Moment                              | `lead_status` | Contenu envoyé                       |
+|-------------------------------------|---------------|--------------------------------------|
+| « Continuer » à l'étape 1           | `partiel`     | Nom, téléphone, e-mail + attribution |
+| Envoi final du formulaire           | `complet`     | Tous les champs + attribution        |
+
+Les deux requêtes portent le **même `lead_id`**.
+
+> ⚠️ **À configurer dans n8n** : le workflow doit rapprocher les deux envois sur `lead_id`
+> et mettre à jour la fiche existante. Sans cela, chaque demande terminée créera **deux
+> entrées**. Solution la plus simple : ne notifier l'équipe que sur
+> `lead_status = "complet"`, et ranger les `partiel` dans une liste de relance.
+
+Détails d'implémentation :
+
+- L'envoi partiel est **silencieux** : aucune erreur n'est affichée et le passage à
+  l'étape 2 n'est jamais bloqué, même si le webhook est injoignable.
+- Il utilise `keepalive`, donc la requête aboutit même si l'onglet est fermé dans la foulée.
+- Un retour à l'étape 1 ne renvoie un lead partiel **que si les coordonnées ont changé**.
+- Le honeypot est vérifié avant l'envoi partiel comme avant l'envoi final.
 
 ### Anti-spam
 
@@ -144,11 +172,13 @@ côté navigateur. Vous pouvez ajouter un second filtre dans n8n si nécessaire.
 | Événement       | Déclenchement                                |
 |-----------------|----------------------------------------------|
 | `form_step`     | Passage à l'étape suivante du formulaire     |
+| `lead_partial`  | Coordonnées transmises à l'étape 1           |
 | `generate_lead` | Formulaire envoyé avec succès                |
 | `conversion`    | Idem, si `adsConversionLabel` est renseigné  |
 | `call_click`    | Clic sur un numéro de téléphone              |
 | `cta_click`     | Clic sur un bouton « Devis »                 |
 | `lead_error`    | Échec d'envoi du formulaire                  |
+| `lead_partial_error` | Échec de l'envoi partiel                |
 
 Chaque événement porte un attribut `element` identifiant l'emplacement exact du clic
 (`cta_header`, `cta_hero`, `cta_mobilebar`, `cta_service_transferts`…), ce qui

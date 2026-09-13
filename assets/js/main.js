@@ -156,6 +156,17 @@
     return stored;
   })();
 
+  /* ---------- Identifiant de lead ---------- */
+  // Le webhook reçoit d'abord les coordonnées seules, puis la demande complète.
+  // Les deux envois portent le même `lead_id` : n8n doit mettre à jour la fiche
+  // existante plutôt que d'en créer une seconde.
+  var leadId = (function () {
+    try {
+      if (window.crypto && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+    } catch (e) { /* contexte non sécurisé */ }
+    return 'msk-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  })();
+
   /* ============================================================
      FORMULAIRE MULTI-ÉTAPES
      ============================================================ */
@@ -307,7 +318,9 @@
   if (nextBtn) {
     nextBtn.addEventListener('click', function () {
       if (!validateStep(current)) return;
-      track('form_step', { step: current + 1, step_name: ['trajet', 'passagers', 'contact'][current] });
+      // L'étape 1 ne contient que les coordonnées : on les sécurise tout de suite.
+      if (current === 0) sendPartialLead();
+      track('form_step', { step: current + 1, step_name: ['contact', 'trajet', 'passagers'][current] });
       showStep(current + 1, { userInitiated: true });
     });
   }
@@ -356,7 +369,7 @@
   });
 
   /* ---------- Envoi ---------- */
-  function buildPayload() {
+  function buildPayload(extra) {
     var data = {};
     new FormData(form).forEach(function (value, key) {
       data[key] = typeof value === 'string' ? value.trim() : value;
@@ -364,6 +377,8 @@
     delete data.website; // honeypot
 
     return Object.assign({}, data, attribution, {
+      lead_id: leadId,
+      lead_status: 'complet',
       source: 'landing-google-ads',
       page_url: window.location.href,
       page_title: doc.title,
@@ -371,12 +386,13 @@
       langue: 'fr',
       user_agent: navigator.userAgent,
       submitted_at: new Date().toISOString()
-    });
+    }, extra || {});
   }
 
   // Le formulaire est désormais le seul chemin de conversion : une coupure réseau
   // ponctuelle ne doit pas coûter un lead, donc on retente une fois avant d'échouer.
-  function sendLead(payload, attempt) {
+  function sendLead(payload, attempt, opts) {
+    opts = opts || {};
     var controller = new AbortController();
     var timer = setTimeout(function () { controller.abort(); }, 12000);
 
@@ -384,6 +400,9 @@
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+      // keepalive : la requête survit à la fermeture de l'onglet, indispensable
+      // pour la capture partielle que le visiteur peut interrompre à tout moment.
+      keepalive: opts.keepalive === true,
       signal: controller.signal
     })
       .then(function (response) {
@@ -397,8 +416,39 @@
         clearTimeout(timer);
         // On ne retente pas une erreur 4xx : le serveur a bien reçu et refusé.
         var retryable = !error.status || error.status >= 500;
-        if (attempt < 2 && retryable) return sendLead(payload, attempt + 1);
+        if (attempt < 2 && retryable) return sendLead(payload, attempt + 1, opts);
         throw error;
+      });
+  }
+
+  /* ---------- Capture des coordonnées dès l'étape 1 ---------- */
+  // Beaucoup de visiteurs abandonnent avant la dernière étape. Dès que le nom et
+  // le téléphone sont validés, ils partent au webhook : le lead reste exploitable
+  // même si la demande n'est jamais terminée.
+  var partialSignature = '';
+
+  function contactSignature() {
+    var data = new FormData(form);
+    return ['nom', 'telephone', 'email'].map(function (key) {
+      return String(data.get(key) || '').trim();
+    }).join('|');
+  }
+
+  function sendPartialLead() {
+    if (form.elements.website && form.elements.website.value) return; // robot
+    // Un retour en arrière sans modification ne doit pas renvoyer le même lead.
+    var signature = contactSignature();
+    if (signature === partialSignature) return;
+    partialSignature = signature;
+
+    // Envoi silencieux : aucune erreur affichée, la navigation continue.
+    sendLead(buildPayload({ lead_status: 'partiel' }), 1, { keepalive: true })
+      .then(function () {
+        track('lead_partial', { lead_id: leadId });
+      })
+      .catch(function (error) {
+        partialSignature = ''; // nouvelle tentative au prochain passage sur l'étape
+        track('lead_partial_error', { message: String((error && error.message) || error) });
       });
   }
 
