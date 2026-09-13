@@ -225,7 +225,7 @@
     setStatus('');
 
     if (opts.focus !== false) {
-      var firstControl = $('input:not([type=radio]):not([type=hidden]), textarea, [type=radio]', steps[current]);
+      var firstControl = $('input:not([type=hidden]), select, textarea', steps[current]);
       // On ne vole pas le focus au premier affichage, uniquement lors d'une navigation
       if (firstControl && opts.userInitiated) {
         try { firstControl.focus({ preventScroll: true }); } catch (e) { firstControl.focus(); }
@@ -245,21 +245,8 @@
     var scope = steps[index];
     clearInvalid(scope);
     var firstInvalid = null;
-    var seenGroups = {};
 
     $$('[required]', scope).forEach(function (el) {
-      if (el.type === 'radio') {
-        if (seenGroups[el.name]) return;
-        seenGroups[el.name] = true;
-        var checked = form.querySelector('input[name="' + el.name + '"]:checked');
-        if (!checked) {
-          var group = el.closest('.tiles') || el.closest('.chipset');
-          if (group) group.classList.add('is-invalid');
-          if (!firstInvalid) firstInvalid = el;
-        }
-        return;
-      }
-
       if (el.type === 'checkbox') {
         if (!el.checked && !firstInvalid) firstInvalid = el;
         return;
@@ -338,14 +325,6 @@
     });
   });
 
-  // Avancer automatiquement après un choix sur les tuiles de service
-  $$('.tiles input[name="service"]', form).forEach(function (input) {
-    input.addEventListener('change', function () {
-      var group = input.closest('.tiles');
-      if (group) group.classList.remove('is-invalid');
-    });
-  });
-
   // Entrée = étape suivante (sauf dans le textarea)
   form.addEventListener('keydown', function (event) {
     if (event.key !== 'Enter' || event.target.tagName === 'TEXTAREA') return;
@@ -355,17 +334,13 @@
     }
   });
 
-  // Nettoyage des erreurs à la saisie
+  // Nettoyage du surlignage d'erreur dès que le visiteur corrige
   form.addEventListener('input', function (event) {
-    var el = event.target;
-    el.classList.remove('is-invalid');
-    var group = el.closest('.tiles') || el.closest('.chipset');
-    if (group) group.classList.remove('is-invalid');
+    event.target.classList.remove('is-invalid');
   });
 
   form.addEventListener('change', function (event) {
-    var group = event.target.closest('.tiles') || event.target.closest('.chipset');
-    if (group) group.classList.remove('is-invalid');
+    event.target.classList.remove('is-invalid');
   });
 
   /* ---------- Envoi ---------- */

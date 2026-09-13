@@ -117,8 +117,9 @@ vidé** : le visiteur peut renvoyer sans tout ressaisir. Une réponse 4xx n'est 
 ### Formulaire en 3 étapes
 
 Le formulaire est découpé en trois étapes (**Contact → Trajet → Passagers**) avec une barre
-de progression. Les choix se font par tuiles et puces cliquables plutôt que par listes
-déroulantes, ce qui réduit nettement l'abandon sur mobile.
+de progression. Service, nombre de personnes, bagages et véhicule sont des listes
+déroulantes natives : la saisie reste courte et le rendu est identique sur tous les
+navigateurs.
 
 - Les coordonnées sont demandées **en premier**, pour qu'un abandon en cours de route
   laisse quand même un contact exploitable (voir la capture partielle ci-dessous).
