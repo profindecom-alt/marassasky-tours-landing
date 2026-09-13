@@ -123,7 +123,7 @@ la saisie reste courte et le rendu est identique sur tous les navigateurs.
 | Étape | Champs |
 |-------|--------|
 | 1 · Contact | Nom\*, téléphone / WhatsApp\*, e-mail |
-| 2 · Demande | Service\*, trajet\*, personnes\*, bagages, véhicule |
+| 2 · Demande | Service\*, personnes\*, bagages, véhicule, trajet\* |
 
 - Les coordonnées sont demandées **en premier**, pour qu'un abandon en cours de route
   laisse quand même un contact exploitable (voir la capture partielle ci-dessous).
