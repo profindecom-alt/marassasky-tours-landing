@@ -276,7 +276,7 @@ strong{font-weight:700;color:var(--ink)}
 
 /* ---------- Barre de progression ---------- */
 .progress__track{height:4px;border-radius:var(--r-pill);background:rgba(255,255,255,.14);overflow:hidden}
-.progress__fill{display:block;height:100%;width:33.33%;border-radius:var(--r-pill);background:linear-gradient(90deg,var(--amber),var(--orange));transition:width .45s var(--ease)}
+.progress__fill{display:block;height:100%;width:50%;border-radius:var(--r-pill);background:linear-gradient(90deg,var(--amber),var(--orange));transition:width .45s var(--ease)}
 .progress__list{display:flex;justify-content:space-between;margin-top:11px}
 .progress__list li{display:flex;align-items:center;gap:7px;font-size:.78rem;font-weight:600;color:rgba(255,255,255,.45);transition:color .3s var(--ease)}
 .progress__list b{
@@ -339,24 +339,6 @@ strong{font-weight:700;color:var(--ink)}
 /* Tant que rien n'est choisi, l'intitulé reste gris, comme un placeholder. */
 .field select:has(option[value=""]:checked){color:#A9A8B4}
 .field select option{color:var(--ink)}
-
-/* ---------- Récapitulatif étape 3 ---------- */
-.recap{
-  display:flex;flex-wrap:wrap;gap:7px;
-  margin-bottom:18px;padding:13px 14px;
-  background:var(--surface-2);border-radius:var(--r-sm);
-  border-left:3px solid var(--orange);
-}
-.recap:empty{display:none}
-.recap span{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:4px 11px;border-radius:var(--r-pill);
-  background:#fff;box-shadow:var(--sh-1);
-  font-size:.78rem;font-weight:600;color:var(--ink);
-  /* Le trajet est saisi librement : un mot très long ne doit pas
-     élargir la carte et provoquer un défilement horizontal. */
-  min-width:0;max-width:100%;overflow-wrap:anywhere;
-}
 
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 

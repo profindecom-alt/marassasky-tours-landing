@@ -114,27 +114,30 @@ dépassé (12 s), la page **retente automatiquement une fois**. Si la seconde te
 échoue aussi, un message invite à réessayer ou à appeler, et **le formulaire n'est pas
 vidé** : le visiteur peut renvoyer sans tout ressaisir. Une réponse 4xx n'est pas retentée.
 
-### Formulaire en 3 étapes
+### Formulaire en 2 étapes
 
-Le formulaire est découpé en trois étapes (**Contact → Trajet → Passagers**) avec une barre
-de progression. Service, nombre de personnes, bagages et véhicule sont des listes
-déroulantes natives : la saisie reste courte et le rendu est identique sur tous les
-navigateurs.
+Le formulaire tient en deux étapes (**Contact → Demande**) avec une barre de progression.
+Service, nombre de personnes, bagages et véhicule sont des listes déroulantes natives :
+la saisie reste courte et le rendu est identique sur tous les navigateurs.
+
+| Étape | Champs |
+|-------|--------|
+| 1 · Contact | Nom\*, téléphone / WhatsApp\*, e-mail |
+| 2 · Demande | Service\*, trajet\*, personnes\*, bagages, véhicule |
 
 - Les coordonnées sont demandées **en premier**, pour qu'un abandon en cours de route
   laisse quand même un contact exploitable (voir la capture partielle ci-dessous).
-- L'étape 3 affiche un récapitulatif du service et du trajet choisis avant validation.
 - La validation est faite étape par étape, avec surlignage des champs manquants.
-- Les valeurs des étapes précédentes restent dans le `FormData` : la charge utile envoyée
-  à n8n est identique quelle que soit l'étape où elles ont été saisies.
-- Le formulaire **nécessite JavaScript** : l'envoi passe par `fetch` vers n8n et les étapes
-  2 et 3 portent l'attribut `hidden` dans le HTML, pour éviter qu'elles clignotent au
-  chargement avant l'initialisation.
+- Les valeurs de l'étape 1 restent dans le `FormData` : la charge utile envoyée à n8n
+  est identique quelle que soit l'étape où les champs ont été saisis.
+- Le formulaire **nécessite JavaScript** : l'envoi passe par `fetch` vers n8n et l'étape 2
+  porte l'attribut `hidden` dans le HTML, pour éviter qu'elle clignote au chargement
+  avant l'initialisation.
 
 ### Capture partielle : deux envois pour un même lead
 
 Au clic sur « Continuer » à l'étape 1, les coordonnées validées partent **immédiatement**
-au webhook. Le visiteur qui abandonne aux étapes suivantes reste donc joignable.
+au webhook. Le visiteur qui abandonne à l'étape suivante reste donc joignable.
 
 | Moment                              | `lead_status` | Contenu envoyé                       |
 |-------------------------------------|---------------|--------------------------------------|

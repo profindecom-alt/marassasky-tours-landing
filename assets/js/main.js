@@ -181,7 +181,6 @@
   var submitBtn = $('#submitBtn');
   var statusEl = $('#formStatus');
   var successEl = $('#formSuccess');
-  var recapEl = $('#recap');
   var formcard = $('#devis');
 
   var current = 0;
@@ -221,7 +220,6 @@
     if (nextBtn) nextBtn.hidden = isLast;
     if (submitBtn) submitBtn.hidden = !isLast;
 
-    if (isLast) buildRecap();
     setStatus('');
 
     if (opts.focus !== false) {
@@ -281,33 +279,13 @@
     return true;
   }
 
-  /* ---------- Récapitulatif ---------- */
-  function buildRecap() {
-    if (!recapEl) return;
-    var data = new FormData(form);
-    var parts = [];
-    ['service', 'personnes', 'vehicule'].forEach(function (key) {
-      var v = data.get(key);
-      if (v) parts.push(String(v));
-    });
-    // Le trajet est saisi librement : on le raccourcit pour la pastille de récap
-    var trajet = (data.get('trajet') || '').trim();
-    if (trajet) {
-      parts.unshift(trajet.length > 64 ? trajet.slice(0, 64).trim() + '…' : trajet);
-    }
-
-    recapEl.innerHTML = parts.map(function (p) {
-      return '<span>' + p.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>';
-    }).join('');
-  }
-
   /* ---------- Navigation ---------- */
   if (nextBtn) {
     nextBtn.addEventListener('click', function () {
       if (!validateStep(current)) return;
       // L'étape 1 ne contient que les coordonnées : on les sécurise tout de suite.
       if (current === 0) sendPartialLead();
-      track('form_step', { step: current + 1, step_name: ['contact', 'trajet', 'passagers'][current] });
+      track('form_step', { step: current + 1, step_name: ['contact', 'demande'][current] });
       showStep(current + 1, { userInitiated: true });
     });
   }
