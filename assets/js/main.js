@@ -224,8 +224,13 @@
 
     if (opts.focus !== false) {
       var firstControl = $('input:not([type=hidden]), select, textarea', steps[current]);
+      // Jamais de focus automatique sur un <select> : le focus programmé suffit
+      // à déployer la liste, soit par le picker natif sur mobile, soit par le
+      // keyup de la touche Entrée qui vient de servir à changer d'étape. Ouvrir
+      // la liste doit rester une décision du visiteur.
+      var isSelect = firstControl && firstControl.tagName === 'SELECT';
       // On ne vole pas le focus au premier affichage, uniquement lors d'une navigation
-      if (firstControl && opts.userInitiated) {
+      if (firstControl && !isSelect && opts.userInitiated) {
         try { firstControl.focus({ preventScroll: true }); } catch (e) { firstControl.focus(); }
       }
     }
@@ -272,7 +277,13 @@
 
     if (firstInvalid) {
       setStatus('Merci de compléter les champs surlignés.');
-      try { firstInvalid.focus({ preventScroll: false }); } catch (e) { firstInvalid.focus(); }
+      // Même raison que dans showStep : un <select> fautif est amené dans
+      // l'écran sans recevoir le focus, sinon sa liste se déploie toute seule.
+      if (firstInvalid.tagName === 'SELECT') {
+        firstInvalid.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+      } else {
+        try { firstInvalid.focus({ preventScroll: false }); } catch (e) { firstInvalid.focus(); }
+      }
       return false;
     }
     setStatus('');
