@@ -31,6 +31,12 @@ node serve.js      # http://localhost:8080
 Copiez le dossier tel quel sur n'importe quel hébergement statique :
 Hostinger, Netlify, Vercel, Cloudflare Pages, ou un sous-dossier de votre serveur.
 
+> ⚠️ **À chaque modification de `style.css` ou de `main.js`, incrémentez le jeton
+> `?v=` des deux balises en tête d'`index.html`** (et de `merci.html` pour le CSS).
+> Sans lui, un visiteur déjà venu reçoit le nouveau HTML avec l'ancien CSS et
+> l'ancien JS gardés en cache : le formulaire s'affiche alors à moitié mis à jour,
+> par exemple avec une liste d'indicatifs réduite au seul Maroc.
+
 **Recommandation :** un sous-domaine dédié, `https://form.marassasky-tours.ma`,
 afin de garder les statistiques de campagne séparées du site principal.
 C'est le domaine déclaré dans le conteneur Google Tag Manager `GTM-MDLM8PX6`.

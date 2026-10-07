@@ -35,7 +35,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- Préchargé uniquement sur grand écran : sur mobile la photo est très voilée
      et ce préchargement coûterait 226 Ko en concurrence du formulaire. -->
 <link rel="preload" as="image" href="assets/img/hero.jpg" media="(min-width:761px)">
-<link rel="stylesheet" href="assets/css/style.css">
+<!-- ?v= : jeton de version. Sans lui, un visiteur déjà venu garde en cache
+     l'ancien CSS et l'ancien JS avec le nouveau HTML, et le formulaire se
+     retrouve à moitié mis à jour. À incrémenter à chaque modification de
+     style.css ou de main.js. -->
+<link rel="stylesheet" href="assets/css/style.css?v=20261007">
 
 <!-- ===== Google Ads en direct (ALTERNATIVE à GTM, ne pas cumuler) =====
      Google Tag Manager est déjà installé ci-dessus : le plus simple est d'y créer
@@ -755,6 +759,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <a class="mobilebar__cta" href="#devis" data-track="cta_mobilebar"><span>Demander un devis gratuit</span></a>
 </div>
 
-<script src="assets/js/main.js" defer></script>
+<script src="assets/js/main.js?v=20261007" defer></script>
 </body>
 </html>
