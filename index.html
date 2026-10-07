@@ -185,14 +185,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <input type="text" name="nom" placeholder="Votre nom" required autocomplete="name">
             </label>
             <label class="field">
-              <span>Téléphone / WhatsApp<i>*</i></span>
-              <input type="tel" name="telephone" placeholder="+212 6 00 00 00 00" required autocomplete="tel" inputmode="tel">
+              <span>E-mail<i>*</i></span>
+              <input type="email" name="email" placeholder="vous@exemple.com" required autocomplete="email" inputmode="email">
+              <!-- Suggestion de correction en cas de faute de frappe sur le domaine -->
+              <small class="field__hint" id="mailHint" aria-live="polite" hidden></small>
             </label>
           </div>
 
           <label class="field">
-            <span>E-mail</span>
-            <input type="email" name="email" placeholder="vous@exemple.com" autocomplete="email" inputmode="email">
+            <span>Téléphone / WhatsApp<i>*</i></span>
+            <!-- L'indicatif est choisi à part : beaucoup de demandes viennent de
+                 France, d'Espagne ou de Belgique, et « 06 12 34 56 78 » ne permet
+                 pas de deviner le pays. Sans indicatif, le lead est injoignable. -->
+            <div class="tel">
+              <select class="tel__code" name="telephone_pays" aria-label="Indicatif du pays">
+                <option value="MA">+212 Maroc</option>
+              </select>
+              <input class="tel__num" type="tel" name="telephone" placeholder="6 12 34 56 78" required autocomplete="tel-national" inputmode="tel">
+            </div>
+            <small class="field__hint" id="telHint" aria-live="polite" hidden></small>
           </label>
         </fieldset>
 

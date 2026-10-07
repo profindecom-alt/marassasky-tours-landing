@@ -340,6 +340,21 @@ strong{font-weight:700;color:var(--ink)}
 .field select:has(option[value=""]:checked){color:#A9A8B4}
 .field select option{color:var(--ink)}
 
+/* ---------- Téléphone : indicatif + numéro ---------- */
+/* L'indicatif garde une largeur fixe pour que le numéro commence toujours au
+   même endroit ; le nom du pays peut être rogné, l'indicatif reste lisible. */
+.tel{display:grid;grid-template-columns:minmax(0,150px) 1fr;gap:8px}
+.tel__code{padding-left:12px;padding-right:28px;background-position:right 10px center}
+.tel__num{min-width:0}
+
+/* ---------- Indication sous un champ ---------- */
+.field__hint{font-size:.76rem;font-weight:600;color:var(--ok-dk);line-height:1.35}
+.field__hint--err{color:var(--danger)}
+.field__hint button{
+  font:inherit;color:var(--orange-dk);background:none;border:0;padding:0;
+  cursor:pointer;text-decoration:underline;
+}
+
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 
 
@@ -752,6 +767,7 @@ strong{font-weight:700;color:var(--ink)}
   .formcard__eta{flex:none;white-space:nowrap;padding:5px 10px;font-size:.68rem}
   .form{padding:18px}
   .form__row--2{grid-template-columns:1fr;gap:14px}
+  .tel{grid-template-columns:minmax(0,146px) 1fr;gap:7px}
   /* Les pastilles numérotées occupaient une ligne entière (26px de rond plus
      20px de marge tactile) pour n'afficher que « 1 » et « 2 ». Sur mobile on
      garde la barre et les deux intitulés, qui disent la même chose en 15px. */

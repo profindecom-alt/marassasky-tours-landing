@@ -168,6 +168,258 @@
   })();
 
   /* ============================================================
+     VÉRIFICATION DU TÉLÉPHONE (INTERNATIONAL)
+     ============================================================
+     Les demandes ne viennent pas que du Maroc : France, Espagne, Belgique et
+     Suisse reviennent souvent. Or « 06 12 34 56 78 » est un numéro valide au
+     Maroc comme en France, et rien dans la saisie ne permet de trancher. Le
+     visiteur choisit donc son indicatif, et le numéro est vérifié selon les
+     règles du pays retenu, puis normalisé en E.164 avant l'envoi à n8n.
+
+     Chaque entrée : indicatif, nom, longueur nationale min/max, « 0 » initial à
+     retirer (1 = oui), motif du numéro national (null = contrôle de longueur
+     seul), exemple affiché en aide de saisie.
+     ============================================================ */
+  var PHONE_COUNTRIES = [
+    ['MA', '212', 'Maroc',                9,  9, 1, /^[5-7]\d{8}$/,            '6 12 34 56 78'],
+    ['FR', '33',  'France',               9,  9, 1, /^[1-9]\d{8}$/,            '6 12 34 56 78'],
+    ['ES', '34',  'Espagne',              9,  9, 0, /^[6-9]\d{8}$/,            '612 34 56 78'],
+    ['BE', '32',  'Belgique',             8,  9, 1, /^[1-9]\d{7,8}$/,          '470 12 34 56'],
+    ['CH', '41',  'Suisse',               9,  9, 1, /^[1-9]\d{8}$/,            '78 123 45 67'],
+    ['DE', '49',  'Allemagne',            6, 11, 1, /^[1-9]\d{5,10}$/,         '151 23456789'],
+    ['IT', '39',  'Italie',               6, 11, 0, /^(3\d{8,9}|0\d{5,10})$/,  '312 345 6789'],
+    ['NL', '31',  'Pays-Bas',             9,  9, 1, /^[1-9]\d{8}$/,            '6 12345678'],
+    ['GB', '44',  'Royaume-Uni',          9, 10, 1, /^[1-9]\d{8,9}$/,          '7400 123456'],
+    ['US', '1',   'USA / Canada',        10, 10, 0, /^[2-9]\d{2}[2-9]\d{6}$/,  '201 555 0123'],
+    ['PT', '351', 'Portugal',             9,  9, 0, /^[2369]\d{8}$/,           '912 345 678'],
+
+    ['ZA', '27',  'Afrique du Sud',       9,  9, 1, /^[1-9]\d{8}$/,            '71 123 4567'],
+    ['DZ', '213', 'Algérie',              9,  9, 1, /^[1-9]\d{8}$/,            '551 23 45 67'],
+    ['AO', '244', 'Angola',               9,  9, 0, null,                      '923 123 456'],
+    ['SA', '966', 'Arabie saoudite',      9,  9, 1, /^[1-9]\d{8}$/,            '51 234 5678'],
+    ['AR', '54',  'Argentine',           10, 11, 0, null,                      '11 2345 6789'],
+    ['AU', '61',  'Australie',            9,  9, 1, /^[1-9]\d{8}$/,            '412 345 678'],
+    ['AT', '43',  'Autriche',             7, 13, 1, null,                      '664 123456'],
+    ['BH', '973', 'Bahreïn',              8,  8, 0, /^[13679]\d{7}$/,          '3600 1234'],
+    ['BJ', '229', 'Bénin',                8, 10, 0, null,                      '01 12 34 56 78'],
+    ['BR', '55',  'Brésil',              10, 11, 0, null,                      '11 96123 4567'],
+    ['BF', '226', 'Burkina Faso',         8,  8, 0, null,                      '70 12 34 56'],
+    ['CM', '237', 'Cameroun',             9,  9, 0, /^[26]\d{8}$/,             '6 71 23 45 67'],
+    ['CN', '86',  'Chine',                9, 11, 0, null,                      '131 2345 6789'],
+    ['CY', '357', 'Chypre',               8,  8, 0, /^[2-9]\d{7}$/,            '96 123456'],
+    ['CD', '243', 'Congo (RDC)',          9,  9, 1, null,                      '991 234 567'],
+    ['KR', '82',  'Corée du Sud',         8, 10, 1, null,                      '10 1234 5678'],
+    ['CI', '225', 'Côte d’Ivoire',        10, 10, 0, null,                '07 12 34 56 78'],
+    ['DK', '45',  'Danemark',             8,  8, 0, /^[2-9]\d{7}$/,            '32 12 34 56'],
+    ['EG', '20',  'Égypte',               9, 10, 1, null,                      '100 123 4567'],
+    ['AE', '971', 'Émirats arabes unis',  9,  9, 1, /^[2-9]\d{8}$/,            '50 123 4567'],
+    ['FI', '358', 'Finlande',             6, 10, 1, null,                      '41 2345678'],
+    ['GA', '241', 'Gabon',                7,  8, 0, null,                      '06 03 12 34'],
+    ['GH', '233', 'Ghana',                9,  9, 1, null,                      '24 123 4567'],
+    ['GR', '30',  'Grèce',               10, 10, 0, /^[2-7]\d{9}$/,            '691 234 5678'],
+    ['GN', '224', 'Guinée',               9,  9, 0, null,                      '622 12 34 56'],
+    ['HU', '36',  'Hongrie',              8,  9, 1, null,                      '20 123 4567'],
+    ['IN', '91',  'Inde',                10, 10, 0, /^[6-9]\d{9}$/,            '81234 56789'],
+    ['ID', '62',  'Indonésie',            8, 12, 1, null,                      '812 345 678'],
+    ['IQ', '964', 'Irak',                10, 10, 1, null,                      '791 234 5678'],
+    ['IE', '353', 'Irlande',              7,  9, 1, null,                      '85 012 3456'],
+    ['IL', '972', 'Israël',               8,  9, 1, null,                      '50 123 4567'],
+    ['JP', '81',  'Japon',                9, 10, 1, null,                      '90 1234 5678'],
+    ['JO', '962', 'Jordanie',             8,  9, 1, null,                      '79 012 3456'],
+    ['KE', '254', 'Kenya',                9,  9, 1, null,                      '712 123456'],
+    ['KW', '965', 'Koweït',               8,  8, 0, /^[12569]\d{7}$/,          '500 12345'],
+    ['LB', '961', 'Liban',                7,  8, 1, null,                      '71 123 456'],
+    ['LY', '218', 'Libye',                9,  9, 1, null,                      '91 234 5678'],
+    ['LU', '352', 'Luxembourg',           6,  9, 0, null,                      '628 123 456'],
+    ['MG', '261', 'Madagascar',           9,  9, 1, null,                      '32 12 345 67'],
+    ['MY', '60',  'Malaisie',             8,  9, 1, null,                      '13 345 6789'],
+    ['ML', '223', 'Mali',                 8,  8, 0, null,                      '65 01 23 45'],
+    ['MT', '356', 'Malte',                8,  8, 0, null,                      '9696 1234'],
+    ['MU', '230', 'Maurice',              7,  8, 0, null,                      '5251 2345'],
+    ['MR', '222', 'Mauritanie',           8,  8, 0, null,                      '22 12 34 56'],
+    ['MX', '52',  'Mexique',             10, 10, 0, /^[1-9]\d{9}$/,            '55 1234 5678'],
+    ['NE', '227', 'Niger',                8,  8, 0, null,                      '93 12 34 56'],
+    ['NG', '234', 'Nigeria',              7, 10, 1, null,                      '802 123 4567'],
+    ['NO', '47',  'Norvège',              8,  8, 0, /^[2-9]\d{7}$/,            '406 12 345'],
+    ['NZ', '64',  'Nouvelle-Zélande',     8, 10, 1, null,                      '21 123 4567'],
+    ['OM', '968', 'Oman',                 8,  8, 0, null,                      '9212 3456'],
+    ['UG', '256', 'Ouganda',              9,  9, 1, null,                      '712 345678'],
+    ['PK', '92',  'Pakistan',            10, 10, 1, null,                      '301 2345678'],
+    ['PH', '63',  'Philippines',          8, 10, 1, null,                      '905 123 4567'],
+    ['PL', '48',  'Pologne',              9,  9, 0, /^[1-9]\d{8}$/,            '512 345 678'],
+    ['QA', '974', 'Qatar',                8,  8, 0, /^[3-7]\d{7}$/,            '3312 3456'],
+    ['CZ', '420', 'République tchèque',   9,  9, 0, /^[1-9]\d{8}$/,            '601 123 456'],
+    ['RO', '40',  'Roumanie',             9,  9, 1, /^[1-9]\d{8}$/,            '712 345 678'],
+    ['RU', '7',   'Russie',              10, 10, 1, /^[3-9]\d{9}$/,            '912 345 67 89'],
+    ['SN', '221', 'Sénégal',              9,  9, 0, null,                      '70 123 45 67'],
+    ['RS', '381', 'Serbie',               8,  9, 1, null,                      '60 1234567'],
+    ['SG', '65',  'Singapour',            8,  8, 0, /^[3689]\d{7}$/,           '8123 4567'],
+    ['SK', '421', 'Slovaquie',            9,  9, 1, null,                      '912 123 456'],
+    ['SE', '46',  'Suède',                7,  9, 1, null,                      '70 123 45 67'],
+    ['TZ', '255', 'Tanzanie',             9,  9, 1, null,                      '621 234 567'],
+    ['TD', '235', 'Tchad',                8,  8, 0, null,                      '63 01 23 45'],
+    ['TH', '66',  'Thaïlande',            8,  9, 1, null,                      '81 234 5678'],
+    ['TG', '228', 'Togo',                 8,  8, 0, null,                      '90 11 23 45'],
+    ['TN', '216', 'Tunisie',              8,  8, 0, /^[2-59]\d{7}$/,           '20 123 456'],
+    ['TR', '90',  'Turquie',             10, 10, 1, /^[1-9]\d{9}$/,            '501 234 56 78'],
+    ['UA', '380', 'Ukraine',              9,  9, 1, /^[3-9]\d{8}$/,            '50 123 4567'],
+    ['VN', '84',  'Vietnam',              9, 10, 1, null,                      '91 234 56 78']
+  ];
+
+  // Indicatifs mis en tête de liste : ce sont ceux des campagnes en cours.
+  var PHONE_TOP = ['MA', 'FR', 'ES', 'BE', 'CH', 'DE', 'IT', 'NL', 'GB', 'US', 'PT'];
+
+  var PHONE_BY_ISO = {};
+  var PHONE_BY_LENGTH = PHONE_COUNTRIES.slice().sort(function (a, b) {
+    return b[1].length - a[1].length; // +212 doit être testé avant +21
+  });
+  PHONE_COUNTRIES.forEach(function (row) { PHONE_BY_ISO[row[0]] = row; });
+
+  function phoneCountry(iso) { return PHONE_BY_ISO[iso] || PHONE_BY_ISO.MA; }
+
+  // Chiffres arabes et persans : un visiteur sur clavier arabe saisit ٠٦١٢…
+  function toLatinDigits(value) {
+    return String(value || '').replace(/[٠-٩۰-۹]/g, function (ch) {
+      var code = ch.charCodeAt(0);
+      return String(code >= 0x06F0 ? code - 0x06F0 : code - 0x0660);
+    });
+  }
+
+  // Numéros de démonstration : 00000000, 123456789… Ils coûtent un clic payant
+  // pour un lead injoignable, autant les refuser à la saisie.
+  // Le motif reste volontairement étroit : « 23456789 » est un vrai numéro fixe
+  // belge, seules les suites tapées depuis le début du clavier sont refusées.
+  function looksFake(national) {
+    if (/^(\d)\1+$/.test(national)) return true;
+    if (national.length < 7) return false;
+    return /^0?123456/.test(national) || /^9876543/.test(national);
+  }
+
+  /* Renvoie { ok, e164, iso, national, error }. */
+  function checkPhone(raw, iso) {
+    var text = toLatinDigits(raw).trim();
+    if (!text) return { ok: false, error: 'Indiquez votre numéro de téléphone.' };
+
+    // « 00 » comme « + » annoncent un indicatif pays. Le test porte sur les
+    // chiffres seuls : « 00 212 … » et « 00212… » doivent être lus pareil.
+    var digits = text.replace(/\D/g, '');
+    var international = /^[+＋]/.test(text) || /^00/.test(digits);
+    digits = digits.replace(/^00/, '');
+    if (!digits) return { ok: false, error: 'Ce numéro ne contient aucun chiffre.' };
+
+    var country = phoneCountry(iso);
+    var national = digits;
+
+    if (international) {
+      // L'indicatif saisi prime sur la liste déroulante : un visiteur qui colle
+      // « +33 6 … » a raison, même si le menu est resté sur le Maroc.
+      var found = null;
+      for (var i = 0; i < PHONE_BY_LENGTH.length; i++) {
+        if (digits.indexOf(PHONE_BY_LENGTH[i][1]) === 0) { found = PHONE_BY_LENGTH[i]; break; }
+      }
+      if (!found) {
+        // Pays absent de la liste : contrôle E.164 générique (8 à 15 chiffres).
+        // Aucun indicatif ne commence par 0 : c'est une saisie en l'air.
+        if (digits.charAt(0) === '0') {
+          return { ok: false, error: 'Indicatif pays inconnu : vérifiez le début du numéro.' };
+        }
+        if (digits.length < 8 || digits.length > 15) {
+          return { ok: false, error: 'Numéro international invalide : 8 à 15 chiffres attendus.' };
+        }
+        if (looksFake(digits)) return { ok: false, error: 'Ce numéro ne semble pas réel.' };
+        return { ok: true, e164: '+' + digits, iso: '', national: digits, country: null };
+      }
+      country = found;
+      national = digits.slice(found[1].length);
+    }
+
+    // Préfixe interurbain : « 06 … » devient « 6 … » là où le 0 ne se compose
+    // pas depuis l'étranger. En Italie ou en Espagne, ce 0 fait partie du numéro.
+    if (country[5] && national.charAt(0) === '0') national = national.replace(/^0+/, '');
+
+    if (!national) return { ok: false, error: 'Numéro incomplet.' };
+
+    var name = country[2];
+    var min = country[3];
+    var max = country[4];
+
+    if (national.length < min || national.length > max) {
+      var attendu = min === max
+        ? min + ' chiffres'
+        : 'entre ' + min + ' et ' + max + ' chiffres';
+      return {
+        ok: false,
+        iso: country[0],
+        error: 'Un numéro ' + name + ' compte ' + attendu +
+               ' après l’indicatif (vous en avez saisi ' + national.length + ').'
+      };
+    }
+
+    if (country[6] && !country[6].test(national)) {
+      return {
+        ok: false,
+        iso: country[0],
+        error: 'Ce numéro ne correspond pas à un numéro ' + name + ' valide.'
+      };
+    }
+
+    if (looksFake(national)) {
+      return { ok: false, iso: country[0], error: 'Ce numéro ne semble pas réel.' };
+    }
+
+    return {
+      ok: true,
+      e164: '+' + country[1] + national,
+      iso: country[0],
+      national: national,
+      country: country
+    };
+  }
+
+  // Lecture confortable du numéro reconnu : +212 6 12 34 56 78
+  function formatPhone(result) {
+    if (!result.ok) return '';
+    if (!result.country) return result.e164; // pays hors liste : E.164 brut
+    var rest = result.national;
+    var dial = '+' + result.country[1] + ' ';
+
+    // 10 chiffres : découpage nord-américain, le plus courant à cette longueur.
+    if (rest.length === 10) return dial + rest.slice(0, 3) + ' ' + rest.slice(3, 6) + ' ' + rest.slice(6);
+
+    var head = rest.length % 2 ? rest.slice(0, 1) : '';
+    var groups = rest.slice(head.length).match(/\d{2}/g) || [];
+    return (dial + head + ' ' + groups.join(' ')).replace(/\s+/g, ' ').trim();
+  }
+
+  /* ============================================================
+     VÉRIFICATION DE L'E-MAIL
+     ============================================================ */
+  var EMAIL_RE = /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,24}$/;
+
+  // Fautes de frappe les plus fréquentes sur les domaines grand public.
+  var EMAIL_TYPOS = {
+    'gmail.co': 'gmail.com', 'gmail.con': 'gmail.com', 'gmail.cm': 'gmail.com',
+    'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gmaill.com': 'gmail.com',
+    'gnail.com': 'gmail.com', 'gamil.com': 'gmail.com', 'gmail.fr': 'gmail.com',
+    'hotmail.co': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmial.com': 'hotmail.com',
+    'hotmal.com': 'hotmail.com', 'hotmil.com': 'hotmail.com',
+    'outlook.co': 'outlook.com', 'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com',
+    'yahoo.co': 'yahoo.com', 'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com',
+    'yahoo.fe': 'yahoo.fr', 'orange.f': 'orange.fr', 'wanadoo.f': 'wanadoo.fr',
+    'laposte.ne': 'laposte.net', 'free.f': 'free.fr', 'icloud.co': 'icloud.com'
+  };
+
+  function checkEmail(raw) {
+    var value = String(raw || '').trim();
+    if (!value) return { ok: false, error: 'Indiquez votre adresse e-mail.' };
+    if (value.indexOf('..') !== -1 || !EMAIL_RE.test(value)) {
+      return { ok: false, error: 'Cette adresse e-mail n’est pas valide.' };
+    }
+    var domain = value.split('@').pop().toLowerCase();
+    return { ok: true, email: value, suggestion: EMAIL_TYPOS[domain] ? value.replace(/@.*$/, '@' + EMAIL_TYPOS[domain]) : '' };
+  }
+
+  /* ============================================================
      FORMULAIRE MULTI-ÉTAPES
      ============================================================ */
   var form = $('#quoteForm');
@@ -182,6 +434,125 @@
   var statusEl = $('#formStatus');
   var successEl = $('#formSuccess');
   var formcard = $('#devis');
+
+  /* ---------- Champ téléphone : liste des indicatifs et aides de saisie ---------- */
+  var telCode = form.elements.telephone_pays;
+  var telInput = form.elements.telephone;
+  var telHint = $('#telHint');
+  var mailInput = form.elements.email;
+  var mailHint = $('#mailHint');
+
+  function fillCountries() {
+    if (!telCode) return;
+    var top = [];
+    var rest = [];
+    PHONE_COUNTRIES.forEach(function (row) {
+      (PHONE_TOP.indexOf(row[0]) !== -1 ? top : rest).push(row);
+    });
+    top.sort(function (a, b) { return PHONE_TOP.indexOf(a[0]) - PHONE_TOP.indexOf(b[0]); });
+    rest.sort(function (a, b) { return a[2].localeCompare(b[2], 'fr'); });
+
+    function group(label, rows) {
+      var optgroup = doc.createElement('optgroup');
+      optgroup.label = label;
+      rows.forEach(function (row) {
+        var option = doc.createElement('option');
+        // L'indicatif en premier : si la liste est trop étroite pour le nom du
+        // pays, c'est le nom qui est rogné, jamais le numéro.
+        option.value = row[0];
+        option.textContent = '+' + row[1] + ' ' + row[2];
+        optgroup.appendChild(option);
+      });
+      return optgroup;
+    }
+
+    telCode.innerHTML = '';
+    telCode.appendChild(group('Fréquents', top));
+    telCode.appendChild(group('Tous les pays', rest));
+    telCode.value = 'MA';
+  }
+
+  function setHint(el, message, isError) {
+    if (!el) return;
+    el.textContent = message || '';
+    el.classList.toggle('field__hint--err', !!isError);
+    el.hidden = !message;
+  }
+
+
+  function syncPlaceholder() {
+    if (!telInput || !telCode) return;
+    var country = phoneCountry(telCode.value);
+    telInput.placeholder = country[7] || '';
+  }
+
+  function telState() {
+    return checkPhone(telInput ? telInput.value : '', telCode ? telCode.value : 'MA');
+  }
+
+  // Au départ du champ : l'indicatif collé dans le numéro est déplacé dans la
+  // liste, et le numéro reconnu est affiché pour que le visiteur le relise.
+  function reviewPhone() {
+    if (!telInput) return;
+    if (!telInput.value.trim()) { setHint(telHint, ''); return; }
+
+    var result = telState();
+    if (!result.ok) {
+      setHint(telHint, result.error, true);
+      return;
+    }
+    if (result.iso && telCode && telCode.value !== result.iso) telCode.value = result.iso;
+    if (result.country) telInput.value = result.national;
+    syncPlaceholder();
+    telInput.classList.remove('is-invalid');
+    setHint(telHint, 'Numéro enregistré : ' + (formatPhone(result) || result.e164), false);
+  }
+
+  function reviewEmail() {
+    if (!mailInput || !mailInput.value.trim()) { setHint(mailHint, ''); return; }
+    var result = checkEmail(mailInput.value);
+    if (!result.ok) {
+      setHint(mailHint, result.error, true);
+      return;
+    }
+    mailInput.classList.remove('is-invalid');
+    if (!result.suggestion) { setHint(mailHint, ''); return; }
+
+    // Suggestion non bloquante : une faute de frappe sur le domaine rend le lead
+    // injoignable par e-mail, mais le visiteur reste seul juge de son adresse.
+    setHint(mailHint, '');
+    mailHint.hidden = false;
+    mailHint.classList.remove('field__hint--err');
+    mailHint.textContent = 'Vouliez-vous dire ';
+    var fix = doc.createElement('button');
+    fix.type = 'button';
+    fix.textContent = result.suggestion;
+    fix.addEventListener('click', function () {
+      mailInput.value = result.suggestion;
+      mailInput.classList.remove('is-invalid');
+      setHint(mailHint, '');
+    });
+    mailHint.appendChild(fix);
+    mailHint.appendChild(doc.createTextNode(' ?'));
+  }
+
+  fillCountries();
+  syncPlaceholder();
+
+  if (telCode) {
+    telCode.addEventListener('change', function () {
+      syncPlaceholder();
+      if (telInput && telInput.value.trim()) reviewPhone();
+    });
+  }
+  if (telInput) {
+    telInput.addEventListener('blur', reviewPhone);
+    telInput.addEventListener('input', function () { setHint(telHint, ''); });
+  }
+  if (mailInput) {
+    mailInput.addEventListener('blur', reviewEmail);
+    mailInput.addEventListener('input', function () { setHint(mailHint, ''); });
+  }
 
   var current = 0;
   var maxReached = 0;
@@ -248,6 +619,8 @@
     var scope = steps[index];
     clearInvalid(scope);
     var firstInvalid = null;
+    var hasEmpty = false;
+    var message = '';
 
     $$('[required]', scope).forEach(function (el) {
       if (el.type === 'checkbox') {
@@ -257,26 +630,39 @@
 
       if (!String(el.value).trim()) {
         el.classList.add('is-invalid');
+        hasEmpty = true;
         if (!firstInvalid) firstInvalid = el;
       }
     });
 
-    // Téléphone : au moins 9 chiffres
+    // Téléphone : contrôle complet selon l'indicatif choisi
     var phone = scope.querySelector('input[name="telephone"]');
-    if (phone && phone.value.trim() && phone.value.replace(/\D/g, '').length < 9) {
-      phone.classList.add('is-invalid');
-      if (!firstInvalid) firstInvalid = phone;
+    if (phone && phone.value.trim()) {
+      var tel = checkPhone(phone.value, telCode ? telCode.value : 'MA');
+      if (!tel.ok) {
+        phone.classList.add('is-invalid');
+        if (!firstInvalid) firstInvalid = phone;
+        if (!message) message = tel.error;
+        setHint(telHint, tel.error, true);
+      }
     }
 
-    // E-mail : format simple, seulement s'il est rempli
+    // E-mail : désormais obligatoire, le vide est déjà traité plus haut
     var mail = scope.querySelector('input[name="email"]');
-    if (mail && mail.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail.value.trim())) {
-      mail.classList.add('is-invalid');
-      if (!firstInvalid) firstInvalid = mail;
+    if (mail && mail.value.trim()) {
+      var email = checkEmail(mail.value);
+      if (!email.ok) {
+        mail.classList.add('is-invalid');
+        if (!firstInvalid) firstInvalid = mail;
+        if (!message) message = email.error;
+        setHint(mailHint, email.error, true);
+      }
     }
 
     if (firstInvalid) {
-      setStatus('Merci de compléter les champs surlignés.');
+      // Un champ rempli mais refusé affiche déjà le détail juste sous lui : la
+      // ligne sous le bouton ne le répète pas, elle ne sert qu'aux champs vides.
+      setStatus(hasEmpty || !message ? 'Merci de compléter les champs surlignés.' : '');
       // Même raison que dans showStep : un <select> fautif est amené dans
       // l'écran sans recevoir le focus, sinon sa liste se déploie toute seule.
       if (firstInvalid.tagName === 'SELECT') {
@@ -340,6 +726,16 @@
     });
     delete data.website; // honeypot
 
+    // Téléphone normalisé en E.164 : la forme utilisable telle quelle pour
+    // appeler, ouvrir un WhatsApp ou dédoublonner les fiches dans n8n. La saisie
+    // d'origine est conservée au cas où la normalisation se tromperait de pays.
+    var tel = checkPhone(data.telephone || '', data.telephone_pays || 'MA');
+    data.telephone_saisi = data.telephone || '';
+    if (tel.ok) {
+      data.telephone = tel.e164;
+      data.telephone_pays = tel.iso || data.telephone_pays || '';
+    }
+
     return Object.assign({}, data, attribution, {
       lead_id: leadId,
       lead_status: 'complet',
@@ -393,7 +789,7 @@
 
   function contactSignature() {
     var data = new FormData(form);
-    return ['nom', 'telephone', 'email'].map(function (key) {
+    return ['nom', 'telephone', 'telephone_pays', 'email'].map(function (key) {
       return String(data.get(key) || '').trim();
     }).join('|');
   }

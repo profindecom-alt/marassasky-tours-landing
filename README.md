@@ -8,7 +8,7 @@ Landing page statique en français, calquée sur la structure de la page d'accue
 ```
 index.html              La page complète
 assets/css/style.css    Styles (palette et typographie du site officiel)
-assets/js/main.js       Formulaire, attribution UTM/GCLID, compteurs, suivi
+assets/js/main.js       Formulaire, contrôle téléphone/e-mail, UTM/GCLID, suivi
 assets/img/             16 images reprises du site officiel
 serve.js                Serveur local de prévisualisation
 ```
@@ -78,7 +78,9 @@ https://n8n.srv1019025.hstgr.cloud/webhook/9ee70198-c719-4860-a10f-fdc7dc7e587e
   "vehicule": "Van",
   "trajet": "Aéroport Mohammed V vers Rabat centre, aller-retour",
   "nom": "Karim Alaoui",
-  "telephone": "+212 6 12 34 56 78",
+  "telephone": "+212612345678",
+  "telephone_pays": "MA",
+  "telephone_saisi": "612345678",
   "email": "karim@exemple.com",
 
   "gclid": "Cj0KCQ...",
@@ -122,8 +124,11 @@ la saisie reste courte et le rendu est identique sur tous les navigateurs.
 
 | Étape | Champs |
 |-------|--------|
-| 1 · Contact | Nom\*, téléphone / WhatsApp\*, e-mail |
+| 1 · Contact | Nom\*, e-mail\*, indicatif + téléphone / WhatsApp\* |
 | 2 · Demande | Service\*, personnes\*, bagages, véhicule, trajet\* |
+
+Les trois champs de l'étape 1 sont obligatoires : un lead sans e-mail ne laisse
+qu'un seul moyen de rappel, et un numéro mal saisi n'en laisse aucun.
 
 - Les coordonnées sont demandées **en premier**, pour qu'un abandon en cours de route
   laisse quand même un contact exploitable (voir la capture partielle ci-dessous).
@@ -133,6 +138,56 @@ la saisie reste courte et le rendu est identique sur tous les navigateurs.
 - Le formulaire **nécessite JavaScript** : l'envoi passe par `fetch` vers n8n et l'étape 2
   porte l'attribut `hidden` dans le HTML, pour éviter qu'elle clignote au chargement
   avant l'initialisation.
+
+### Contrôle du téléphone et de l'e-mail
+
+Un lead injoignable est un clic payé pour rien : les deux champs qui servent à
+rappeler sont donc vérifiés sérieusement avant de laisser passer à l'étape 2.
+
+**Le téléphone est international.** Les demandes viennent du Maroc, mais aussi de
+France, d'Espagne, de Belgique et de Suisse. Or « 06 12 34 56 78 » est un numéro
+valide au Maroc **comme** en France : rien dans la saisie ne permet de trancher.
+Le visiteur choisit donc son indicatif dans une liste (**82 pays**, les onze plus
+fréquents en tête), et le numéro est contrôlé selon les règles de ce pays.
+
+Ce que le contrôle refuse :
+
+| Saisie | Verdict |
+|--------|---------|
+| `06 12 34` (indicatif Maroc) | Trop court : 9 chiffres attendus, 4 saisis |
+| `01 23 45 67 89` (indicatif Maroc) | Aucun numéro marocain ne commence par 01 |
+| `06 66 66 66 66` | Chiffre répété, numéro de démonstration |
+| `01 23 45 67 89` (indicatif France) | Suite de chiffres tapée au clavier |
+| `123 555 0123` (indicatif USA) | Indicatif régional invalide en Amérique du Nord |
+| `+676 123` | Hors liste : contrôle E.164, 8 à 15 chiffres |
+
+Ce que le contrôle accepte et corrige tout seul :
+
+- `00212…` et `+212…` aussi bien que `0612345678` ;
+- les espaces, points, tirets et parenthèses ;
+- les chiffres arabes et persans (`٠٦١٢…`), pour les claviers arabophones ;
+- le **0 interurbain**, retiré là où il ne se compose pas depuis l'étranger, mais
+  conservé en Italie et en Espagne où il fait partie du numéro ;
+- un **indicatif collé dans le champ** : saisir `+33 6 12 34 56 78` alors que la
+  liste est restée sur le Maroc bascule la liste sur la France toute seule.
+
+Une fois le numéro reconnu, il s'affiche sous le champ (« Numéro enregistré :
++33 6 12 34 56 78 ») et part à n8n au format **E.164** (`+33612345678`),
+directement utilisable pour appeler, ouvrir un WhatsApp ou dédoublonner. Trois
+champs accompagnent l'envoi : `telephone` (E.164), `telephone_pays` (code ISO du
+pays retenu) et `telephone_saisi` (la frappe d'origine, en cas de doute).
+
+**Ajouter un pays** : une ligne dans `PHONE_COUNTRIES` (`assets/js/main.js`),
+au format `[ISO, indicatif, nom, longueur min, longueur max, 0 à retirer,
+motif ou null, exemple]`. L'exemple sert de texte d'aide dans le champ. Un pays
+absent de la liste reste joignable : le visiteur tape son numéro avec `+`, et
+seule la règle E.164 générique s'applique.
+
+**L'e-mail est obligatoire** et doit être syntaxiquement valide (domaine complet,
+extension d'au moins deux lettres). En cas de faute de frappe sur un domaine
+courant, une suggestion cliquable s'affiche sans bloquer : `karim@gmial.com` →
+« Vouliez-vous dire karim@gmail.com ? ». La liste des fautes couvertes est dans
+`EMAIL_TYPOS`, à compléter librement.
 
 ### Capture partielle : deux envois pour un même lead
 
